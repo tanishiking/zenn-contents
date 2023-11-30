@@ -8,6 +8,8 @@ published: false
 
 [Scala Advent Calendar 2023](https://qiita.com/advent-calendar/2023/scala) 1日目の記事です。
 
+最近はScalaのWASM対応やりたいな〜と思ってWASMを勉強しています。
+
 ## (前置き) Scala の WebAssembly 対応 (2023)
 
 ScalaからWebAssemblyを生成する方法はいくつかあるのですが、[Kotlin/WASM](https://kotlinlang.org/docs/wasm-overview.html) のようにScalaコンパイラがWebAssemblyを直接生成ことは今のところできません。
@@ -17,7 +19,7 @@ ScalaからWebAssemblyを生成する方法はいくつかあるのですが、[
 ### TeaVM
 https://teavm.org/
 
-sbtからも使える🎉
+TeaVMはJVMバイトコードをJSやWASMにAOTコンパイルしてくれるツールです。sbtからも使える🎉
 
 https://xuwei-k.hatenablog.com/entry/2023/11/08/100944
 WebAssembly 対応は experimental とのことで、以前試したときは確かにいろいろ動かなかった気がする
@@ -162,11 +164,11 @@ some data!
 - WASMベースのmicroserviceを実装するためのフレームワーク[spin](https://www.fermyon.com/spin)の、[spin-js-sdk](https://github.com/fermyon/spin-js-sdk)もJavyを使って実装されています。
 - またWASMによるuniversal plugin systemを実装する[Extism](https://extism.org/)の、[js plugin development kit](https://github.com/extism/js-pdk)もJavyを使って実装されています。
 
-Scala.jsでは[ScalablyTyped](https://scalablytyped.org/docs/readme.html)というツールを使うことで簡単にTSライブラリのScalaバインディングが生成可能なので、同じ要領でScalaでWASMベースのmicroserviceやをを実装することが可能です。
+Scala.jsでは[ScalablyTyped](https://scalablytyped.org/docs/readme.html)というツールを使うことで簡単にTSライブラリのScalaバインディングが生成可能なので、同じ要領でScalaでWASMベースのmicroserviceやpluginを実装することができます。
 
 ### Scala on Fermyon Cloud
 
-spin-js-sdk と scala.js を使って、Scalaで書いたコードをWASM上で動くマイクロサービスにしてみました。
+実際にspin-js-sdk、scala.js、ScalablyTypedを使って、Scalaで書いたコードをWASM上で動くマイクロサービスにしてみました。
 
 https://github.com/tanishiking/spin-scalajs-example
 
@@ -176,7 +178,7 @@ https://github.com/tanishiking/spin-scalajs-example
 
 これでScalaをWASM上で動かすことができました！
 
-しかし、デメリットもあります。というのも残念ながら、KotlinやDart、そしてもちろんC++やRustによるWASMと比べると、実行速度は劣るのではないか。その理由は
+しかし、デメリットもあります。というのも残念ながら、KotlinやDart、そしてもちろんC++やRustによるWASMと比べると、実行速度は劣るのではないか(ちゃんと計測してない)。その理由は
 
 - (1) 一つは、WASMモジュールに組み込まれたJSエンジン上でコンパイルしたJSコードを実行するだけだからです。WASMを直接吐き出してそれを実行するほうが早そうに思える
   - QuickJSをサイドモジュールとして動的リンクすることで、WASM moduleのサイズを小さくすることもできますが、static linkするとそのぶんmodule sizeも大きくなる
@@ -211,9 +213,10 @@ Scala.js + Javy でScalaをWASM上で実行できるようになった。[^wasi_
 
 WASMバックエンドは、WASM GCに乗っかるべきだろうか?それともAssemblyScriptなどのように自分たちでlinear memoryに対するGC機構を実装するべきだろうか? - 個人的には WASM GCに乗っかっていくと良さそうな気がしている。
 
-最近は多くのプログラミング言語(KotlinやOCamlやbinaryen IR)がWASM GC primitiveを実装し、また[V8](https://v8.dev/blog/wasm-gc-porting)などもWASM GCをサポートしている。長い目で見れば、wasmtimeやwasmedgeのようなランタイムはいずれwasm gcをサポートするでしょう...[^wasmgc]
+最近は多くのプログラミング言語(KotlinやOCamlやbinaryen IR)がWASM GC primitiveを実装し、また[V8](https://v8.dev/blog/wasm-gc-porting)などもWASM GCをサポートしている。長い目で見れば、wasmtimeやwasmedgeのようなランタイムはいずれwasm gcをサポートするでしょう...(知らんけど)[^wasmgc]
 
 [^wasmgc]: wasmtime 上で WASM GC を実装するための RFC はすでにマージされています https://github.com/bytecodealliance/rfcs/pull/31 またwasmedgeもwasm gcの実装に励んでいるらしい https://github.com/WasmEdge/WasmEdge/issues/1122
 
 それらのプラットフォームがwasm gcを実装してくれれば、我々がGCを自前で実装する必要もなくなるだろう。
-なので、WASMサポートを少しでも簡単にするためにも、自分たちでGCを実装するのではなく、WASM GCにコンパイルすることに集中するべきかもしれない
+
+当面の間は今回紹介した方法でWASMにコンパイルしつつ、(WASMサポートを少しでも簡単にするためにも)自分たちでGCを実装するのではなくWASM GCにコンパイルすることに集中するべきかもしれない
