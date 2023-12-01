@@ -39,6 +39,8 @@ https://scala-native.org/en/stable/
 
 とはいえ仮にScalaがwasm gcやWASIバックエンドを実装したとしても、wasmtime・wasmedge・wasmer(?)はまだgc[^gc]もexception handling[^eh]も実装されておらず、browser-embedding はまだしも、WASI対応はまだまだ遠い話になりそう...[^web]
 
+もしくは AssemblyScript なんかみたいに自前でGCを実装するか、だけどなんかwasmgcが上記のruntimeで使えるようになったらいらなくなるだろうしな〜どうしよう
+
 [^eh]: https://github.com/bytecodealliance/wasmtime/issues/3427 https://github.com/wasmerio/wasmer/issues/3100 LLVMベース言語仲間のCrystalさんも困ってます https://github.com/crystal-lang/crystal/issues/13130
 
 [^gc]: https://github.com/bytecodealliance/rfcs/pull/31 https://github.com/WasmEdge/WasmEdge/issues/1122
