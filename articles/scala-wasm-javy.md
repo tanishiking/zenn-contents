@@ -3,12 +3,12 @@ title: "Scala.js + Javy で Scala を WebAssembly 上で動かす"
 emoji: "🌊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["Scala", "webassembly", "javascript", "scalajs"]
-published: false
+published: true
 ---
 
 [Scala Advent Calendar 2023](https://qiita.com/advent-calendar/2023/scala) 1日目の記事です。
 
-最近はScalaのWASM対応やりたいな〜と思ってWASMを勉強しています。
+最近はScalaのWebAssembly対応やりたいな〜と思ってWebAssemblyの勉強をしています。
 
 ## (前置き) Scala の WebAssembly 対応 (2023)
 
