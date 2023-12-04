@@ -2,7 +2,7 @@
 title: "Scala.js + Javy で Scala を WebAssembly 上で動かす"
 emoji: "🌊"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["Scala", "webassembly", "javascript", "scalajs"]
+topics: ["Scala", "webassembly", "javascript", "scalajs", "wasm"]
 published: true
 ---
 
