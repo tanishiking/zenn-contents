@@ -295,3 +295,13 @@ https://github.com/WebAssembly/gc/tree/waml/proposals/gc/waml
 > An experimental functional language and implementation for exploring and evaluating the Wasm GC proposal.
 
 なる wasm にコンパイルできるミニML言語もある。これを使って、どういうコードがどういうwasmgcコードに変換されるべきかを眺めるのも良い勉強になる。
+
+## 参考
+- [gc/proposals/gc/Overview.md at main · WebAssembly/gc](https://github.com/WebAssembly/gc/blob/main/proposals/gc/Overview.md)
+- [gc/proposals/gc/MVP.md at main · WebAssembly/gc](https://github.com/WebAssembly/gc/blob/main/proposals/gc/MVP.md)
+- [A new way to bring garbage collected programming languages efficiently to WebAssembly · V8](https://v8.dev/blog/wasm-gc-porting)
+- [Wasm GC: What Exactly Is It (and Why I Should Care) - Ivan Mikushin, VMware - YouTube](https://www.youtube.com/watch?v=ndJP-vmZFYk)
+- [WasmGCについて予習する](https://zenn.dev/askua/articles/afe3a3b43b82cb)
+- [webassembly - Why do we need the type of i31 in WasmGC proposal? - Stack Overflow](https://stackoverflow.com/questions/77468063/why-do-we-need-the-type-of-i31-in-wasmgc-proposal)
+- [Bytecode Alliance — WebAssembly Reference Types in Wasmtime](https://bytecodealliance.org/articles/reference-types-in-wasmtime)
+- [WebAssembly Reference Typesで、WasmでDOMを操作する壁がここまで下がった](https://zenn.dev/igrep/articles/2021-11-wasm-reference-types)
