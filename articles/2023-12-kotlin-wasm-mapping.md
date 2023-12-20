@@ -6,7 +6,7 @@ topics: ["wasm", "webassembly", "kotlin", "compiler"]
 published: false
 ---
 
-[WebAssembly Advent Calendar 2023](https://qiita.com/advent-calendar/2023/webassembly) 21日目の記事です。(その1)って言ってるけど続くかは不明。
+[WebAssembly Advent Calendar 2023](https://qiita.com/advent-calendar/2023/webassembly) と [Swift/Kotlin愛好会 Advent Calendar 2023](https://qiita.com/advent-calendar/2023/love_swift_kotlin) 21日目の記事です。
 
 以前 [WasmGCで導入される型や命令のお勉強](https://zenn.dev/tanishiking/articles/learn-wasm-gc) という記事を書いてWasmGC primitivesを学んだので、次はKotlin/Wasmから生成されるWATファイルを眺めて Kotlinのhigh level constructsがWasmGCにどうマッピングされるのかを調べていく(お勉強の過程は[こちら](https://zenn.dev/tanishiking/scraps/b86506b8d23d07))。
 
@@ -123,9 +123,7 @@ fun box() {
     (field (mut i32)))) ;; hashCode
 ```
 
-![kotlin Any](/images/kotlin-wasm-any.png)
-
-from https://seb.deleuze.fr/introducing-kotlin-wasm/ 
+![kotlin Any](/images/kotlin-wasm-any.png "from https://seb.deleuze.fr/introducing-kotlin-wasm/")
 
 vtable や itable は dynamic dispatch のためのよく知られたデータ構造[^dispatch]。後のvirtual callの項で詳しく述べる。
 
@@ -696,6 +694,7 @@ enumのloweringは[このへん](https://github.com/JetBrains/kotlin/blob/a441a8
   - threading
   - string の最適化表現
   - unsigned xxx
+- Kotlinコンパイラのコード読むためにKotlinの勉強したけれど良い言語ですね。そうそうこういうのでいいんだよって気持ちになった
 
 ## 参考
 - [Introducing Kotlin/Wasm by Zalim Bashorov & Sébastien Deleuze @ Wasm I/O 2023 - YouTube](https://www.youtube.com/watch?v=LCtMC_IVCKo)
