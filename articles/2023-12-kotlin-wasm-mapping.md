@@ -3,7 +3,8 @@ title: "Kotlin/Wasmが生成するWasmGCコードを眺める"
 emoji: "🐡"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["wasm", "webassembly", "kotlin", "compiler"]
-published: false
+published: true
+published_at: 2023-12-21 18:30
 ---
 
 [WebAssembly Advent Calendar 2023](https://qiita.com/advent-calendar/2023/webassembly) と [Swift/Kotlin愛好会 Advent Calendar 2023](https://qiita.com/advent-calendar/2023/love_swift_kotlin) 21日目の記事です。
@@ -123,7 +124,9 @@ fun box() {
     (field (mut i32)))) ;; hashCode
 ```
 
-![kotlin Any](/images/kotlin-wasm-any.png "from https://seb.deleuze.fr/introducing-kotlin-wasm/")
+![kotlin Any](/images/kotlin-wasm-any.png)
+
+from https://seb.deleuze.fr/introducing-kotlin-wasm/
 
 vtable や itable は dynamic dispatch のためのよく知られたデータ構造[^dispatch]。後のvirtual callの項で詳しく述べる。
 
