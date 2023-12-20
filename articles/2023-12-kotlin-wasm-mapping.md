@@ -1,5 +1,5 @@
 ---
-title: "Kotlin/WASM internal (その1)"
+title: "Kotlin/Wasmが生成するWasmGCコードを眺める"
 emoji: "🐡"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["wasm", "webassembly", "kotlin", "compiler"]
@@ -10,12 +10,6 @@ published: false
 
 以前 [WasmGCで導入される型や命令のお勉強](https://zenn.dev/tanishiking/articles/learn-wasm-gc) という記事を書いてWasmGC primitivesを学んだので、次はKotlin/Wasmから生成されるWATファイルを眺めて Kotlinのhigh level constructsがWasmGCにどうマッピングされるのかを調べていく(お勉強の過程は[こちら](https://zenn.dev/tanishiking/scraps/b86506b8d23d07))。
 
-今回見てないけど、そのうち調べたいものは
-
-- exception handling
-- coroutine
-- unsigned xxx
-- string の内部表現 (最適化されていてちょっと複雑)
 
 ## Kotlin/Wasm から WAT を生成する
 
@@ -443,8 +437,21 @@ fun box() {
     local.get $0_xs  ;; type: kotlin.IntArray
     call $kotlin.collections.sum___fun_6
     return)
-
 ```
+
+IntArrayの定義
+
+```wasm
+(type $kotlin.wasm.internal.WasmIntArray___type_15 (array (mut i32)))
+(type $kotlin.IntArray___type_31 (sub $kotlin.Any___type_13 (struct
+    (field (ref $kotlin.IntArray.vtable___type_21))
+    (field (ref null struct))
+    (field (mut i32))
+    (field (mut i32))
+    (field (mut (ref null $kotlin.wasm.internal.WasmIntArray___type_15))))))
+```
+
+呼び出し側
 
 ```wasm
 (func $box___fun_66 (type $____type_3)
@@ -464,7 +471,6 @@ fun box() {
 
 ;; dataidx = 1
 (data "\01\00\00\00\02\00\00\00")
-(type $kotlin.wasm.internal.WasmIntArray___type_15 (array (mut i32)))
 ```
 
 - `array.new_data $t $d: [i32, i32] -> [(ref $t)]`
@@ -472,16 +478,6 @@ fun box() {
   - operandは、data内のoffsetとsize
   - `i32.const 0` と `i32.const 2` がそれぞれ offset と size
 - その上の `global.get` から `i32.const 96` `i32.const 0` は `struct.new $kotlin.IntArray___type_31` の引数
-
-
-```
-(type $kotlin.IntArray___type_31 (sub $kotlin.Any___type_13 (struct
-    (field (ref $kotlin.IntArray.vtable___type_21))
-    (field (ref null struct))
-    (field (mut i32))
-    (field (mut i32))
-    (field (mut (ref null $kotlin.wasm.internal.WasmIntArray___type_15))))))
-```
 
 ### generic function
 
@@ -495,6 +491,7 @@ fun box() {
 ```wasm
 (func $box___fun_63 (type $____type_3)
     
+    ;; kotlin.Int___type_40 に与える vtable, itable, typeinfo, hashcode
     ;; Any parameters
     global.get $kotlin.Int.vtable___g_13
     global.get $kotlin.Int.classITable___g_26
@@ -516,11 +513,62 @@ fun box() {
 (type $____type_56 (func (param (ref null $kotlin.Any___type_13)) (result (ref null $kotlin.Any___type_13))))
 ```
 
-- premitive type ではなく `kotlin.Int` に boxing
-- kotlin type の中での type constraints を満たす top 型 (Any) を受け取る関数になる
-- 多分この Lowering は早めにやられてそう
+- i32 ではなく `kotlin.Int` に boxing
+- `T` は kotlin の型の中でのtype constraintsを満たすtop型(ここではAny)になる
+- 呼び出し側が結果を所望の型にcast
 
 
+### generic class
+
+```kotlin
+class Box<T>(t: T) {
+    var value = t
+}
+fun box() {
+    val b = Box<Int>(1)
+    b.value
+}
+```
+
+`Box`の型定義はこう。`T` の代わりに `Any` になっている。
+
+```wasm
+(type $Box___type_38 (sub $kotlin.Any___type_13 (struct
+    (field (ref $Box.vtable___type_27))
+    (field (ref null struct))
+    (field (mut i32))
+    (field (mut i32))
+    (field (mut (ref null $kotlin.Any___type_13)))))) ;; value
+```
+
+`Box` のインスタンス化と、フィールドアクセスはこんな感じ。
+
+```wasm
+(func $box___fun_63 (type $____type_3)
+    (local $0_b (ref null $Box___type_38))
+    ref.null none
+    
+    ;; Any parameters
+    global.get $kotlin.Int.vtable___g_13
+    global.get $kotlin.Int.classITable___g_27
+    i32.const 512
+    i32.const 0
+    
+    i32.const 1
+    struct.new $kotlin.Int___type_42  ;; box
+    call $Box.<init>___fun_62
+    local.tee $0_b  ;; type: <root>.Box<kotlin.Int>
+    struct.get $Box___type_38 4  ;; name: value, type: T of <root>.Box
+    ref.cast $kotlin.Int___type_42
+    struct.get $kotlin.Int___type_42 4  ;; name: value, type: kotlin.Int
+    drop)
+```
+
+- `call $Box.<init>___fun_62` までは特に述べることはない。`Int`をboxingしているくらい
+- 面白いのは `b.value` に対応する部分
+  - `struct.get $Box___type_38 4` (型は `kotlin.Any`) で値を取得
+  - その結果を `ref.cast $kotlin.Int___type_42` で cast
+  - 最後にIntをunboxing
 
 ### enum と pattern match
 
@@ -542,67 +590,34 @@ fun bar(k: Kind) =
     (field (ref null struct)) ;; itable
     (field (mut i32)) ;; typeInfo
     (field (mut i32)) ;; hashCode
-    (field (mut (ref null $kotlin.String___type_34)))
-    (field (mut i32)))))
-
+    (field (mut (ref null $kotlin.String___type_34))) ;; enumの文字列表現
+    (field (mut i32))))) ;; 通し番号
 ```
 
-最後の2つのフィールドはなんだろう?これは `Kind.<init>` を見ると分かって、文字列表現と、enumの通し番号
+box関数を見てみると `Kind.A` に対するwasm表現が `$Kind_A_getInstance___fun_80` というものの呼び出しになっている。
 
 ```wasm
-(func $Kind.<init>___fun_77 (type $____type_101)
-    (param $0_<this> (ref null $Kind___type_44))
-    (param $1_name (ref null $kotlin.String___type_34))
-    (param $2_ordinal i32) (result (ref null $Kind___type_44))
-    
-    ;; Object creation prefix
-    local.get $0_<this>
-    ref.is_null
-    if
-        
-        ;; Any parameters
-        global.get $Kind.vtable___g_30
-        global.get $Kind.classITable___g_34
-        i32.const 580
-        i32.const 0
-        
-        ref.null $kotlin.String___type_34
-        i32.const 0
-        struct.new $Kind___type_44
-        local.set $0_<this>
-    end
-    
-    local.get $0_<this>
-    local.get $1_name  ;; type: kotlin.String
-    local.get $2_ordinal  ;; type: kotlin.Int
-    call $kotlin.Enum.<init>___fun_18
-    drop
-    local.get $0_<this>
-    return)
+(func $box___fun_78 (type $____type_3)
+    call $Kind_A_getInstance___fun_80
+    call $bar___fun_79
+    drop)
+```
 
-(func $kotlin.Enum.<init>___fun_18 (type $____type_67)
-    (param $0_<this> (ref null $kotlin.Enum___type_32))
-    (param $1_name (ref null $kotlin.String___type_34))
-    (param $2_ordinal i32) (result (ref null $kotlin.Enum___type_32))
-    local.get $0_<this>  ;; type: kotlin.Enum<E of kotlin.Enum>
-    local.get $1_name  ;; type: kotlin.String
-    struct.set $kotlin.Enum___type_32 4  ;; name: name, type: kotlin.String
-    local.get $0_<this>  ;; type: kotlin.Enum<E of kotlin.Enum>
-    local.get $2_ordinal  ;; type: kotlin.Int
-    struct.set $kotlin.Enum___type_32 5  ;; name: ordinal, type: kotlin.Int
-    local.get $0_<this>
+これは、`$Kind_initEntries___fun_76` という関数を呼び出して、その後 global 定義されている `Kind.A` の instance を返す関数
+
+```wasm
+(func $Kind_A_getInstance___fun_80 (type $____type_103) (result (ref null $Kind___type_44))
+    call $Kind_initEntries___fun_76
+    global.get $Kind_A_instance___g_8  ;; type: <root>.Kind?
     return)
 ```
+
+`$Kind_initEntries___fun_76` はその名の通り、`Kind.A` と `Kind.B` のインスタンスを作り `global.set`
 
 ```wasm
 (func $Kind_initEntries___fun_76 (type $____type_3)
-    global.get $Kind_entriesInitialized___g_10  ;; type: kotlin.Boolean
-    if
-        return
-    else
-    end
-    i32.const 1
-    global.set $Kind_entriesInitialized___g_10  ;; type: kotlin.Boolean
+    ;; 何回も実行されないように、初期化チェックを行う(省略)
+    ;; ...
     ref.null none
     
     ;; const string: "A"
@@ -611,27 +626,20 @@ fun bar(k: Kind) =
     i32.const 1
     call $kotlin.stringLiteral___fun_25
     
-    i32.const 0
+    i32.const 0 ;; A の通し番号は0、Bは1になる。
     call $Kind.<init>___fun_77
     global.set $Kind_A_instance___g_8  ;; type: <root>.Kind?
-    ref.null none
-    
-    ;; const string: "B"
-    i32.const 30
-    i32.const 1130
-    i32.const 1
-    call $kotlin.stringLiteral___fun_25
-    
-    i32.const 1
-    call $Kind.<init>___fun_77
-    global.set $Kind_B_instance___g_9  ;; type: <root>.Kind?)
+
+    ;; Kind.B についても同様
+)
 ```
 
+`$Kind.<init>___fun_77` はこれまでに見てきたのと同じようなオブジェクトの初期化関数。
+
+それではパターンマッチ部分を見ていく。
+
+
 ```wasm
-(func $box___fun_78 (type $____type_3)
-    call $Kind_A_getInstance___fun_80
-    call $bar___fun_79
-    drop)
 (func $bar___fun_79 (type $____type_102)
     (param $0_k (ref null $Kind___type_44)) (result i32)
     (local $1_tmp0_subject (ref null $Kind___type_44))
@@ -665,107 +673,31 @@ fun bar(k: Kind) =
         end
     end
     return)
-
 ```
 
-```wasm
-(func $Kind_A_getInstance___fun_80 (type $____type_103) (result (ref null $Kind___type_44))
-    call $Kind_initEntries___fun_76
-    global.get $Kind_A_instance___g_8  ;; type: <root>.Kind?
-    return)
-```
-
-### class
-
-```wasm
-(func $box___fun_62 (type $____type_3)
-    (local $0_foo (ref null $Foo___type_36))
-    ref.null none
-    i32.const 1
-    call $Foo.<init>___fun_61
-    local.set $0_foo)
-
-```
-
-```wasm
-(type $Foo___type_36 (sub $kotlin.Any___type_13 (struct
-    (field (ref $Foo.vtable___type_26))
-    (field (ref null struct))
-    (field (mut i32))
-    (field (mut i32))
-    (field (mut i32)))))
-```
-
-
-### default arguments
+長ったらしいけど、こういう感じのif-elseに変換されていることが分かる。
 
 ```kotlin
-fun foo(a: Int, b: Int = 0) = a + b
-fun box() {
-    val x = foo(1)
-    foo(1, x)
+if (k == Kind.A) { return 1; }
+else {
+    if (k == Kind.B) { return 2; }
+    else { throw NoBranchMatchedException(...) }
 }
 ```
 
-```wasm
-(type $____type_3 (func (param)))
-;; ...
-(func $box___fun_64 (type $____type_3)
-    (local $0_x i32)
-    i32.const 1
-    ref.null none
-    i32.const 2
-    ref.null none
-    call $foo$default___fun_63
-    local.set $0_x
-    i32.const 1
-    local.get $0_x  ;; type: kotlin.Int
-    call $foo___fun_62
-    drop)
+enumのloweringは[このへん](https://github.com/JetBrains/kotlin/blob/a441a82357270f793dac3a378505c6c6993c44be/compiler/ir/backend.wasm/src/org/jetbrains/kotlin/backend/wasm/WasmLoweringPhases.kt#L204-L267)で実装されている
 
-(func $foo$default___fun_63 (type $____type_91)
-    (param $0_a i32)
-    (param $1_b (ref null $kotlin.Int___type_40))
-    (param $2_$mask0 i32)
-    (param $3_$handler (ref null $kotlin.Any___type_13)) (result i32)
-    local.get $2_$mask0  ;; type: kotlin.Int
-    i32.const 2
-    i32.and
-    i32.const 0
-    i32.eq
-    i32.eqz
-    if
-        
-        ;; Any parameters
-        global.get $kotlin.Int.vtable___g_13
-        global.get $kotlin.Int.classITable___g_26
-        i32.const 480
-        i32.const 0
-        
-        i32.const 0
-        struct.new $kotlin.Int___type_40  ;; box
-        local.set $1_b  ;; type: kotlin.Int?
-    else
-    end
-    local.get $0_a  ;; type: kotlin.Int
-    local.get $1_b  ;; type: kotlin.Int?
-    struct.get $kotlin.Int___type_40 4  ;; name: value, type: kotlin.Int
-    call $foo___fun_62
-    return)
-
-```
-
-
-
-## 感想
+## 感想など
 - Rustなどの生成する Wasm ではlinear memory上へのallocationや、それらの構造体へのポインタ(`i32`)に型がなかったりして、生成されたWasmコードを読むのが難しかった。WasmGCではallocationは `struct.new` とかするだけでエンジン側が面倒を見てくれるのでコードがとても読みやすくなった。
-- コンパイラ側からするとターゲット言語が高級になり、実装は簡単になってそうではあるが、エンジン側の実装難易度は上がりそう。この調子でいろんな仕様が追加されると少しずつportabilityが損なわれていくのではないかという懸念はある。僕はエンジン実装することなかなか無い気がするので知らんけど
-  - https://zenn.dev/ri5255/articles/845ef3dab5ab47#wasm%E3%81%AF%E3%81%AA%E3%81%9Cportable%E3%81%AA%E3%81%AE%E3%81%8B%3F
-- 
+- コンパイラ側からするとターゲット言語が高級になり、実装は簡単になってそう(エンジン実装側は大変そう)
+- 今回はWasmGCに関連しそうなものだけ観察したが、他のhigh-level-constructsのWasm表現も調べたい
+  - exception handling
+  - coroutine
+  - threading
+  - string の最適化表現
+  - unsigned xxx
 
-
-
-## 参考文献など
+## 参考
 - [Introducing Kotlin/Wasm by Zalim Bashorov & Sébastien Deleuze @ Wasm I/O 2023 - YouTube](https://www.youtube.com/watch?v=LCtMC_IVCKo)
   - blog ver: [Introducing Kotlin/Wasm · seb.deleuze.fr](https://seb.deleuze.fr/introducing-kotlin-wasm/)
 - [Kotlin Docs | Kotlin Documentation](https://kotlinlang.org/docs/home.html)
