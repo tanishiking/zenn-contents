@@ -4,10 +4,10 @@ emoji: "🐡"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["wasm", "webassembly", "kotlin", "compiler"]
 published: true
-published_at: 2023-12-21 18:30
 ---
 
 [WebAssembly Advent Calendar 2023](https://qiita.com/advent-calendar/2023/webassembly) と [Swift/Kotlin愛好会 Advent Calendar 2023](https://qiita.com/advent-calendar/2023/love_swift_kotlin) 21日目の記事です。
+(枠が空いてそうだったのでKotlin愛好会の方のカレンダーにも登録してしまった)
 
 以前 [WasmGCで導入される型や命令のお勉強](https://zenn.dev/tanishiking/articles/learn-wasm-gc) という記事を書いてWasmGC primitivesを学んだので、次はKotlin/Wasmから生成されるWATファイルを眺めて Kotlinのhigh level constructsがWasmGCにどうマッピングされるのかを調べていく(お勉強の過程は[こちら](https://zenn.dev/tanishiking/scraps/b86506b8d23d07))。
 
@@ -102,7 +102,7 @@ fun box() {
 }
 ```
 
-まず `Person` class は以下のように `struct` で表現される。
+まず `Foo` class は以下のように `struct` で表現される。
 
 ```wasm
 (type $Foo___type_36 (sub $kotlin.Any___type_13 (struct
