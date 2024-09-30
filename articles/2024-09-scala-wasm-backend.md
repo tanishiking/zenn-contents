@@ -2,7 +2,7 @@
 title: "Scala の Wasm バックエンドを実装した"
 emoji: "📘"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["wasm", "webassembly", "scala", "compiler", "javascript"]
+topics: [webassembly", "scala", "compiler", "javascript"]
 published: true
 ---
 
@@ -10,7 +10,7 @@ Scala.js 1.17.0 で実験的な Wasm backend がサポートされました！
 
 https://www.scala-js.org/news/2024/09/28/announcing-scalajs-1.17.0/
 
-リリースノートに書いてあるとおり、以下のような設定をすることでScala.jsがJSの代わりにWasmモジュールを生成することができます。
+リリースノートに書いてあるとおり、以下のような設定をすることでScala.jsがJSの代わりにWasmモジュール(とモジュールに渡すJS object)を生成することができます。
 
 `@JSExport` によるモジュールのexportがサポートされていませんが、それ以外のsemanticsはサポートされており、既存のScala.jsアプリケーションを変更なしにWasmにビルドすることが可能なはずです。(もし何か問題があれば教えて下さい!)
 
@@ -49,7 +49,7 @@ jsEnv := {
 
 ## パフォーマンス・バイナリサイズ
 
-Wasmは早いとか言われますが、実際はWasmは最適化する余地がJSより大きいという理解で、実際現時点ではWasmバックエンドは必ずしもScala.jsのJSバックエンドより実行速度が早いコードを生成するとは限りません。
+Wasmは早いとか遅いとか言われますが、実際はWasmは最適化する余地がJSより大きいというだけの話(という理解)で早いか遅いかはアプリケーションの性質とコンパイラとVMの実装にかかっています。残念ながら、現時点ではWasmバックエンドは必ずしもScala.jsのJSバックエンドより実行速度が早いコードを生成するとは限りません。
 
 また生成されるコードのサイズも、現時点では Scala.js の JS backend + Google Closure Compiler を使って最適化したものの方が、Wasm backend よりも小さいコードを生成します。
 
@@ -62,7 +62,7 @@ https://dev.virtuslab.com/i/146705467/run-time-performance-analysis
 
 https://x.com/velvetbaldmime/status/1840009315094016489
 
-これを見てWasm遅いじゃん！と思ってほしくはなくてScala.jsは10年以上の最適化の積み重ねにより効率的なJSコードを生成しているのに対して、Wasmバックエンドは開発開始からまだ約半年。まだまだ最適化の余地が多く残されています。
+これを見てWasm遅いじゃん！と思ってほしくはなくてScala.jsは10年以上の最適化の積み重ねにより効率的なJSコードを生成している(VMも同じですね)のに対して、Wasmバックエンドは開発開始からまだ約半年。まだまだ最適化の余地が多く残されています。
 
 例えばまだ[wasm-opt](https://github.com/WebAssembly/binaryen)は[一部のWasmGCの機能が不足している](https://github.com/WebAssembly/binaryen/issues/6407)ため、Scala.jsが生成したWasmバイナリに対して最適化を実行することができません。(block parameter typeを`local.get`と`local.set`にlowerするパッチは手元にあるのですが...)
 
