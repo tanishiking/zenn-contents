@@ -3,7 +3,7 @@ title: "Scala の Wasm バックエンドを実装した"
 emoji: "📘"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["wasm", "webassembly", "scala", "compiler", "javascript"]
-published: false
+published: true
 ---
 
 Scala.js 1.17.0 で実験的な Wasm backend がサポートされました！
