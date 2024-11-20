@@ -1,5 +1,5 @@
 ---
-title: "Wasm Component Model の嬉しさがいまいち分からないので教えてほしい"
+title: "Wasm Component Model に対するもやもや"
 emoji: "👀"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["wasm"]
