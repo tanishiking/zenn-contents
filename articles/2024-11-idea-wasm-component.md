@@ -6,6 +6,12 @@ topics: ["wasm"]
 published: true
 ---
 
+:::message
+2024-12-06
+Xで意見を募ったところ様々なコメントを頂きました。ありがとうございます。
+頂いたコメントを踏まえて新しく文章を書きました: [Wasm Component Model に対するもやもやが晴れてきた](https://zenn.dev/tanishiking/articles/2024-1206-idea-wasm-component)
+:::
+
 https://zenn.dev/tanishiking/articles/2024-09-scala-wasm-backend
 
 先日ScalaのWasmバックエンド(JS依存)をリリースし、さて次はこれをJS依存のない**スタンドアローンWasmランタイム(wasmtime, wasmedgeなど)で実行できるようにしよう**と思っている。そのためにはいくつかの標準ライブラリをWASIを利用して再実装してあげる必要がある。
