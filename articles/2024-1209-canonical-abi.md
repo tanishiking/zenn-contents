@@ -165,7 +165,7 @@ Component-levelでのstringは実は以下の3つ組で表現されている。
 
 `src_encoding`は `utf8`, `utf16`, `latin1+utf16` の3つがあり、`latin1+utf16` の場合は `src_tagged_code_units` の最上位bitが1の場合は`utf16`、0の場合は`latin1`というようにコンポーネント内で2つの文字コードを使い分けることができるらしい。
 
-core wasmでのstringは、(`src_encoding`で)encodeされて線形メモリ場に配置され、線形メモリ上のoffsetとbyte lengthの2つ組(`[i32, i32]`)で表現される。
+core wasmでのstringは、(`src_encoding`で)encodeされて線形メモリ場に配置され、線形メモリ上のoffsetとcode unitsの2つ組(`[i32, i32]`)で表現される。
 
 > Since strings and variable-length lists are stored in linear memory, lifting can reuse the previous definitions; only the resulting pointers are returned differently (as i32 values instead of as a pair in linear memory). Fixed-length lists are lowered the same way as tuples
 > https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md#flat-lowering
@@ -207,7 +207,7 @@ class ListType(ValType):
   - `ListType(string, 2)` なら `[i32, i32, i32, i32]` になる
 - 可変長の場合
   - stringと同様に線形メモリに値をstore(配置は前から順番にリストの中身を置いていくだけ)
-  - その先頭のoffsetとbyte lengthの2つ組(`[i32, i32]`)がcore wasm valueになる
+  - その先頭のoffsetとengthの2つ組(`[i32, i32]`)がcore wasm valueになる
 
 というように固定長の場合と可変長の場合でcore wasmでの表現が異なる
 
@@ -216,10 +216,10 @@ class ListType(ValType):
 - `lift_flat`
   - liftターゲットの型が固定長の場合はそれぞれのcore valueをliftしていくだけ
   - 可変長の場合は2つ組で表現された線形メモリの範囲、要素型の`elem_size`ずつ値をloadしてliftしていく
-    - `elem_size` はcomponent-level typeの、可変長リスト上でのbyte length
+    - `elem_size` はcomponent-level typeの、可変長リスト上でのlength
 - `load`/`store`
   - 固定長: `flat`だとスタックに配置していたものが、線形メモリ上に置かれるだけ
-  - 可変長: stringと同様に(reallocで確保した範囲に)データを配置し、そのoffsetとbyte lengthの2つ組を線形メモリ上に置く
+  - 可変長: stringと同様に(reallocで確保した範囲に)データを配置し、そのoffsetとlengthの2つ組を線形メモリ上に置く
 
 ## record
 
