@@ -6,11 +6,7 @@ topics: ["scala"]
 published: true
 ---
 
-このブログは2025年11月27日に開催された[Scalaわいわい勉強会 #6](https://scala-tokyo.connpass.com/event/371493/)で発表した内容をブログに書き起こしたものです。
-
-@[speakerdeck](0372d3789ced4e43b3a2a85dea0a6687)
-
----
+[Scala - Qiita Advent Calendar 2025 - Qiita](https://qiita.com/advent-calendar/2025/scala)
 
 大規模なソフトウェアを書くときに厄介なものの一つに、可変なデータの取り扱いが挙げられるでしょう。例えば、意図しない箇所でいつの間にかデータが書き換わっていたり、使うべきではないタイミングでリソースを使ってしまうことなど。
 
@@ -293,6 +289,10 @@ incr(a) // ❌
 ## まとめ
 
 Capture Checking も Separation Checking もまだまだ開発途上の機能ですが、基本的にはGCでメモリを気にせずに書きつつも部分的にはRustみたいな制約を一部取り入れたプログラムが書けるようになって便利&楽しくなるのではないでしょうか。
+
+このブログは2025年11月27日に開催された[Scalaわいわい勉強会 #6](https://scala-tokyo.connpass.com/event/371493/)で発表した内容をブログに書き起こしたものです。
+
+@[speakerdeck](0372d3789ced4e43b3a2a85dea0a6687)
 
 # 参考資料
 
